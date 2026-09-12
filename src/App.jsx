@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 
-const API_URL = 'https://velto-gifts-qaebyuwxw-grexgifts-projects.vercel.app'
+const API_URL = 'https://velto-gifts-api.vercel.app'
 
 function App() {
   const [page, setPage] = useState('home')
