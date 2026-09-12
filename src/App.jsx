@@ -8,22 +8,26 @@ function App() {
   const [balance, setBalance] = useState(0)
   const [user, setUser] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [adminLoading, setAdminLoading] = useState(false)
 
   useEffect(() => {
     loadUser()
   }, [])
 
+  const getTelegram = () => {
+    return window.Telegram?.WebApp
+  }
+
   const loadUser = async () => {
     try {
-      const tg = window.Telegram?.WebApp
+      const tg = getTelegram()
 
       tg?.ready()
       tg?.expand()
 
-      const telegramUser = tg?.initDataUnsafe?.user
-
-      if (!telegramUser || !tg?.initData) {
+      if (!tg?.initData) {
         setLoading(false)
         return
       }
@@ -63,6 +67,112 @@ function App() {
     }
   }
 
+  const loadUsers = async () => {
+    try {
+      setAdminLoading(true)
+
+      const tg = getTelegram()
+
+      const response = await fetch(`${API_URL}/api/admin/users`, {
+        headers: {
+          'x-telegram-init-data': tg?.initData || ''
+        }
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.ok) {
+        alert(data.error || 'Не удалось загрузить пользователей')
+        return
+      }
+
+      setUsers(data.users || [])
+    } catch (error) {
+      console.error(error)
+      alert('Ошибка соединения с API')
+    } finally {
+      setAdminLoading(false)
+    }
+  }
+
+  const changeBalance = async (telegramId, amount) => {
+    const value = Number(amount)
+
+    if (!Number.isInteger(value) || value === 0) {
+      alert('Введите корректное количество Stars')
+      return
+    }
+
+    try {
+      const tg = getTelegram()
+
+      const response = await fetch(`${API_URL}/api/admin/balance`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-telegram-init-data': tg?.initData || ''
+        },
+        body: JSON.stringify({
+          telegramId,
+          amount: value
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.ok) {
+        alert(data.error || 'Ошибка изменения баланса')
+        return
+      }
+
+      await loadUsers()
+      alert(`Баланс изменён: ${value > 0 ? '+' : ''}${value} ⭐`)
+    } catch (error) {
+      console.error(error)
+      alert('Ошибка соединения с API')
+    }
+  }
+
+  const askBalance = async (telegramId) => {
+    const amount = prompt('Введите количество Stars. Например: 100 или -50')
+
+    if (amount === null) {
+      return
+    }
+
+    await changeBalance(telegramId, amount)
+  }
+
+  const toggleBlock = async (telegramId, blocked) => {
+    try {
+      const tg = getTelegram()
+
+      const response = await fetch(`${API_URL}/api/admin/block`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-telegram-init-data': tg?.initData || ''
+        },
+        body: JSON.stringify({
+          telegramId,
+          blocked: !blocked
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.ok) {
+        alert(data.error || 'Ошибка блокировки')
+        return
+      }
+
+      await loadUsers()
+    } catch (error) {
+      console.error(error)
+      alert('Ошибка соединения с API')
+    }
+  }
+
   const openCase = (price) => {
     if (balance < price) {
       alert(`Недостаточно Stars. Нужно ⭐ ${price}`)
@@ -81,6 +191,7 @@ function App() {
       <header className="header">
         <div>
           <h1>VeltoGifts</h1>
+
           <p>
             {loading
               ? 'Загрузка...'
@@ -100,6 +211,7 @@ function App() {
           <>
             <section className="hero">
               <h2>VeltoGifts</h2>
+
               <p>
                 Открывай кейсы, крути рулетку и собирай подарки.
               </p>
@@ -115,7 +227,11 @@ function App() {
             <div className="cards">
               <div className="card">
                 <h3>🎁 Кейсы</h3>
-                <p>Открывай специальные кейсы.</p>
+
+                <p>
+                  Открывай специальные кейсы.
+                </p>
+
                 <button onClick={() => setPage('cases')}>
                   Открыть
                 </button>
@@ -123,7 +239,11 @@ function App() {
 
               <div className="card">
                 <h3>🎒 Инвентарь</h3>
-                <p>Твои полученные подарки.</p>
+
+                <p>
+                  Твои полученные подарки.
+                </p>
+
                 <button onClick={() => setPage('inventory')}>
                   Открыть
                 </button>
@@ -133,7 +253,10 @@ function App() {
             {isAdmin && (
               <button
                 className="main-button"
-                onClick={() => setPage('admin')}
+                onClick={() => {
+                  setPage('admin')
+                  loadUsers()
+                }}
               >
                 🛡️ Админ-панель
               </button>
@@ -148,7 +271,11 @@ function App() {
             <div className="cards">
               <div className="card">
                 <h3>⭐ Starter Case</h3>
-                <p>Стоимость: 10 ⭐</p>
+
+                <p>
+                  Стоимость: 10 ⭐
+                </p>
+
                 <button onClick={() => openCase(10)}>
                   Открыть за 10 ⭐
                 </button>
@@ -156,7 +283,11 @@ function App() {
 
               <div className="card">
                 <h3>💎 Premium Case</h3>
-                <p>Стоимость: 50 ⭐</p>
+
+                <p>
+                  Стоимость: 50 ⭐
+                </p>
+
                 <button onClick={() => openCase(50)}>
                   Открыть за 50 ⭐
                 </button>
@@ -171,7 +302,10 @@ function App() {
 
             <div className="empty">
               <div>🎁</div>
-              <p>Инвентарь пока пуст.</p>
+
+              <p>
+                Инвентарь пока пуст.
+              </p>
             </div>
           </>
         )}
@@ -209,39 +343,86 @@ function App() {
           <>
             <h2>🛡️ Админ-панель</h2>
 
-            <div className="cards">
-              <div className="card">
-                <h3>⭐ Баланс</h3>
-                <p>Выдача и управление внутренним балансом.</p>
-                <button onClick={() => alert('Раздел в разработке')}>
-                  Управление
-                </button>
-              </div>
+            <button
+              className="main-button"
+              onClick={loadUsers}
+            >
+              🔄 Обновить пользователей
+            </button>
 
-              <div className="card">
-                <h3>👥 Пользователи</h3>
-                <p>Просмотр пользователей VeltoGifts.</p>
-                <button onClick={() => alert('Раздел в разработке')}>
-                  Пользователи
-                </button>
+            {adminLoading ? (
+              <div className="empty">
+                <p>Загрузка пользователей...</p>
               </div>
+            ) : users.length === 0 ? (
+              <div className="empty">
+                <div>👥</div>
 
-              <div className="card">
-                <h3>🚫 Блокировки</h3>
-                <p>Блокировка и разблокировка пользователей.</p>
-                <button onClick={() => alert('Раздел в разработке')}>
-                  Управление
-                </button>
+                <p>
+                  Пользователей пока нет.
+                </p>
               </div>
+            ) : (
+              <div className="cards">
+                {users.map((item) => (
+                  <div
+                    className="card"
+                    key={item.telegramId}
+                  >
+                    <h3>
+                      👤 {item.firstName || 'Без имени'}
+                    </h3>
 
-              <div className="card">
-                <h3>🎁 Подарки</h3>
-                <p>Управление виртуальными подарками.</p>
-                <button onClick={() => alert('Раздел в разработке')}>
-                  Управление
-                </button>
+                    <p>
+                      ID: {item.telegramId}
+                    </p>
+
+                    <p>
+                      Username:{' '}
+                      {item.username
+                        ? `@${item.username}`
+                        : 'нет'}
+                    </p>
+
+                    <p>
+                      ⭐ Баланс: {item.balance}
+                    </p>
+
+                    <p>
+                      🎁 Подарков: {item.inventoryCount}
+                    </p>
+
+                    <p>
+                      Статус:{' '}
+                      {item.blocked
+                        ? '🚫 Заблокирован'
+                        : '🟢 Активен'}
+                    </p>
+
+                    <button
+                      onClick={() =>
+                        askBalance(item.telegramId)
+                      }
+                    >
+                      ⭐ Изменить баланс
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        toggleBlock(
+                          item.telegramId,
+                          item.blocked
+                        )
+                      }
+                    >
+                      {item.blocked
+                        ? '🔓 Разблокировать'
+                        : '🚫 Заблокировать'}
+                    </button>
+                  </div>
+                ))}
               </div>
-            </div>
+            )}
           </>
         )}
       </main>
