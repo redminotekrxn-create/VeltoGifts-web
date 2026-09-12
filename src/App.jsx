@@ -7,6 +7,7 @@ function App() {
   const [page, setPage] = useState('home')
   const [balance, setBalance] = useState(0)
   const [user, setUser] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -22,7 +23,7 @@ function App() {
 
       const telegramUser = tg?.initDataUnsafe?.user
 
-      if (!telegramUser) {
+      if (!telegramUser || !tg?.initData) {
         setLoading(false)
         return
       }
@@ -33,7 +34,7 @@ function App() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          initData: tg?.initData || ''
+          initData: tg.initData
         })
       })
 
@@ -42,6 +43,18 @@ function App() {
       if (data.ok) {
         setUser(data.user)
         setBalance(data.user.balance || 0)
+      }
+
+      const adminResponse = await fetch(`${API_URL}/api/admin/check`, {
+        headers: {
+          'x-telegram-init-data': tg.initData
+        }
+      })
+
+      const adminData = await adminResponse.json()
+
+      if (adminData.ok) {
+        setIsAdmin(adminData.isAdmin === true)
       }
     } catch (error) {
       console.error('API error:', error)
@@ -87,7 +100,9 @@ function App() {
           <>
             <section className="hero">
               <h2>VeltoGifts</h2>
-              <p>Открывай кейсы, крути рулетку и собирай подарки.</p>
+              <p>
+                Открывай кейсы, крути рулетку и собирай подарки.
+              </p>
             </section>
 
             <button
@@ -114,6 +129,15 @@ function App() {
                 </button>
               </div>
             </div>
+
+            {isAdmin && (
+              <button
+                className="main-button"
+                onClick={() => setPage('admin')}
+              >
+                🛡️ Админ-панель
+              </button>
+            )}
           </>
         )}
 
@@ -144,6 +168,7 @@ function App() {
         {page === 'inventory' && (
           <>
             <h2>🎒 Инвентарь</h2>
+
             <div className="empty">
               <div>🎁</div>
               <p>Инвентарь пока пуст.</p>
@@ -176,6 +201,46 @@ function App() {
               <p>
                 <b>Баланс:</b> ⭐ {balance}
               </p>
+            </div>
+          </>
+        )}
+
+        {page === 'admin' && isAdmin && (
+          <>
+            <h2>🛡️ Админ-панель</h2>
+
+            <div className="cards">
+              <div className="card">
+                <h3>⭐ Баланс</h3>
+                <p>Выдача и управление внутренним балансом.</p>
+                <button onClick={() => alert('Раздел в разработке')}>
+                  Управление
+                </button>
+              </div>
+
+              <div className="card">
+                <h3>👥 Пользователи</h3>
+                <p>Просмотр пользователей VeltoGifts.</p>
+                <button onClick={() => alert('Раздел в разработке')}>
+                  Пользователи
+                </button>
+              </div>
+
+              <div className="card">
+                <h3>🚫 Блокировки</h3>
+                <p>Блокировка и разблокировка пользователей.</p>
+                <button onClick={() => alert('Раздел в разработке')}>
+                  Управление
+                </button>
+              </div>
+
+              <div className="card">
+                <h3>🎁 Подарки</h3>
+                <p>Управление виртуальными подарками.</p>
+                <button onClick={() => alert('Раздел в разработке')}>
+                  Управление
+                </button>
+              </div>
             </div>
           </>
         )}
