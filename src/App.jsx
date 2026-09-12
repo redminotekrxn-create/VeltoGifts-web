@@ -33,9 +33,7 @@ function App() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          telegramId: telegramUser.id,
-          username: telegramUser.username || '',
-          firstName: telegramUser.first_name || ''
+          initData: tg?.initData || ''
         })
       })
 
