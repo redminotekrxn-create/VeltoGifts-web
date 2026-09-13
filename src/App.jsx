@@ -3,6 +3,40 @@ import './App.css'
 
 const API_URL = 'https://velto-gifts-api.vercel.app'
 
+const PRIZE_VISUALS = {
+  common: {
+    emoji: '🎁',
+    title: 'Common Gift',
+    className: 'common'
+  },
+  rare: {
+    emoji: '💎',
+    title: 'Rare Gift',
+    className: 'rare'
+  },
+  epic: {
+    emoji: '🔥',
+    title: 'Epic Gift',
+    className: 'epic'
+  },
+  legendary: {
+    emoji: '👑',
+    title: 'Legendary Gift',
+    className: 'legendary'
+  }
+}
+
+const REEL_ITEMS = [
+  { id: 'common', emoji: '🎁', name: 'Common Gift' },
+  { id: 'rare', emoji: '💎', name: 'Rare Gift' },
+  { id: 'epic', emoji: '🔥', name: 'Epic Gift' },
+  { id: 'legendary', emoji: '👑', name: 'Legendary Gift' },
+  { id: 'common', emoji: '🎁', name: 'Common Gift' },
+  { id: 'rare', emoji: '💎', name: 'Rare Gift' },
+  { id: 'epic', emoji: '🔥', name: 'Epic Gift' },
+  { id: 'legendary', emoji: '👑', name: 'Legendary Gift' }
+]
+
 function App() {
   const [page, setPage] = useState('home')
   const [balance, setBalance] = useState(0)
@@ -11,8 +45,14 @@ function App() {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [adminLoading, setAdminLoading] = useState(false)
+
   const [openingCase, setOpeningCase] = useState(false)
   const [lastReward, setLastReward] = useState(null)
+  const [showResult, setShowResult] = useState(false)
+
+  const [reelItems, setReelItems] = useState(REEL_ITEMS)
+  const [reelOffset, setReelOffset] = useState(0)
+  const [reelTransition, setReelTransition] = useState('none')
 
   useEffect(() => {
     loadUser()
@@ -106,19 +146,14 @@ function App() {
     }
   }
 
-  const changeBalance = async (
-    telegramId,
-    amount
-  ) => {
+  const changeBalance = async (telegramId, amount) => {
     const value = Number(amount)
 
     if (
       !Number.isInteger(value) ||
       value === 0
     ) {
-      alert(
-        'Введите корректное количество Stars'
-      )
+      alert('Введите корректное количество Stars')
       return
     }
 
@@ -219,6 +254,61 @@ function App() {
     }
   }
 
+  const prepareReel = (reward) => {
+    const visual =
+      PRIZE_VISUALS[reward?.id] ||
+      PRIZE_VISUALS.common
+
+    const resultItem = {
+      id: reward?.id || 'common',
+      emoji: visual.emoji,
+      name: reward?.name || visual.title,
+      value: reward?.value || 0
+    }
+
+    const items = []
+
+    for (let i = 0; i < 28; i++) {
+      items.push({
+        ...REEL_ITEMS[i % REEL_ITEMS.length],
+        key: `${i}-${Math.random()}`
+      })
+    }
+
+    items.push({
+      ...resultItem,
+      key: `winner-${Date.now()}`
+    })
+
+    setReelItems(items)
+    setReelOffset(0)
+    setReelTransition('none')
+
+    return items.length - 1
+  }
+
+  const animateToReward = async (reward) => {
+    const winnerIndex = prepareReel(reward)
+
+    await new Promise(resolve =>
+      requestAnimationFrame(resolve)
+    )
+
+    const itemWidth = 118
+    const targetOffset =
+      -(winnerIndex * itemWidth) + 150
+
+    setReelTransition(
+      'transform 4.8s cubic-bezier(0.08, 0.65, 0.12, 1)'
+    )
+
+    setReelOffset(targetOffset)
+
+    await new Promise(resolve =>
+      setTimeout(resolve, 5000)
+    )
+  }
+
   const openCase = async (caseId) => {
     if (openingCase) {
       return
@@ -236,6 +326,7 @@ function App() {
 
       setOpeningCase(true)
       setLastReward(null)
+      setShowResult(false)
 
       const response = await fetch(
         `${API_URL}/api/cases/open`,
@@ -258,21 +349,30 @@ function App() {
           data.error ||
           'Не удалось открыть кейс'
         )
+        setOpeningCase(false)
         return
       }
 
       setBalance(data.balance)
-      setLastReward(data.reward)
 
       if (user) {
         setUser({
           ...user,
           balance: data.balance,
-          inventory: data.inventory || user.inventory
+          inventory:
+            data.inventory ||
+            user.inventory
         })
       }
+
+      await animateToReward(data.reward)
+
+      setLastReward(data.reward)
+      setShowResult(true)
+
     } catch (error) {
       console.error(error)
+
       alert(
         'Ошибка соединения с сервером'
       )
@@ -281,14 +381,26 @@ function App() {
     }
   }
 
+  const closeResult = () => {
+    setShowResult(false)
+  }
+
   const spinRoulette = () => {
     alert(
       'Бесплатная рулетка пока находится в разработке 🎡'
     )
   }
 
+  const getPrizeVisual = (reward) => {
+    return (
+      PRIZE_VISUALS[reward?.id] ||
+      PRIZE_VISUALS.common
+    )
+  }
+
   return (
     <div className="app">
+
       <header className="header">
         <div>
           <h1>VeltoGifts</h1>
@@ -311,30 +423,45 @@ function App() {
       </header>
 
       <main className="content">
+
         {page === 'home' && (
           <>
             <section className="hero">
-              <h2>VeltoGifts</h2>
+              <div className="hero-badge">
+                ✨ TELEGRAM GIFTS
+              </div>
+
+              <h2>
+                VeltoGifts
+              </h2>
 
               <p>
-                Открывай кейсы, крути рулетку
-                и собирай подарки.
+                Открывай кейсы, получай
+                подарки и собирай свою
+                коллекцию.
               </p>
             </section>
 
             <button
-              className="main-button"
+              className="main-button roulette-button"
               onClick={spinRoulette}
             >
-              🎡 Бесплатная рулетка
+              <span>🎡</span>
+              Бесплатная рулетка
             </button>
 
             <div className="cards">
-              <div className="card">
-                <h3>🎁 Кейсы</h3>
+
+              <div className="card feature-card">
+                <div className="feature-icon">
+                  🎁
+                </div>
+
+                <h3>Кейсы</h3>
 
                 <p>
-                  Открывай специальные кейсы.
+                  Открывай доступные кейсы
+                  и получай подарки.
                 </p>
 
                 <button
@@ -342,15 +469,20 @@ function App() {
                     setPage('cases')
                   }
                 >
-                  Открыть
+                  Смотреть кейсы
                 </button>
               </div>
 
-              <div className="card">
-                <h3>🎒 Инвентарь</h3>
+              <div className="card feature-card">
+                <div className="feature-icon">
+                  🎒
+                </div>
+
+                <h3>Инвентарь</h3>
 
                 <p>
-                  Твои полученные подарки.
+                  Все твои полученные
+                  подарки находятся здесь.
                 </p>
 
                 <button
@@ -358,14 +490,15 @@ function App() {
                     setPage('inventory')
                   }
                 >
-                  Открыть
+                  Открыть инвентарь
                 </button>
               </div>
+
             </div>
 
             {isAdmin && (
               <button
-                className="main-button"
+                className="main-button admin-button"
                 onClick={() => {
                   setPage('admin')
                   loadUsers()
@@ -379,119 +512,222 @@ function App() {
 
         {page === 'cases' && (
           <>
-            <h2>🎁 Кейсы</h2>
+            <div className="page-heading">
+              <h2>🎁 Кейсы</h2>
+              <p>
+                Выбери кейс и посмотри,
+                что внутри.
+              </p>
+            </div>
 
-            {lastReward && (
-              <div className="card">
-                <h3>🎉 Последняя награда</h3>
+            {openingCase && (
+              <section className="reel-section">
 
-                <p>
-                  🎁 {lastReward.name}
+                <div className="reel-title">
+                  Открываем кейс...
+                </div>
+
+                <div className="reel-wrapper">
+
+                  <div className="reel-pointer">
+                    ▼
+                  </div>
+
+                  <div className="reel-window">
+                    <div
+                      className="reel-track"
+                      style={{
+                        transform:
+                          `translateX(${reelOffset}px)`,
+                        transition:
+                          reelTransition
+                      }}
+                    >
+                      {reelItems.map(
+                        (item) => {
+                          const visual =
+                            PRIZE_VISUALS[
+                              item.id
+                            ] ||
+                            PRIZE_VISUALS.common
+
+                          return (
+                            <div
+                              className={`reel-item ${visual.className}`}
+                              key={item.key}
+                            >
+                              <div className="reel-icon">
+                                {item.emoji}
+                              </div>
+
+                              <div className="reel-name">
+                                {item.name}
+                              </div>
+                            </div>
+                          )
+                        }
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="reel-pointer bottom">
+                    ▲
+                  </div>
+
+                </div>
+
+                <p className="reel-hint">
+                  Результат определяется
+                  сервером
                 </p>
+              </section>
+            )}
 
-                <p>
-                  💎 Ценность:{' '}
-                  {lastReward.value}
-                </p>
+            {!openingCase && (
+              <div className="cards">
 
-                <p>
-                  ⭐ Текущий баланс:{' '}
-                  {balance}
-                </p>
+                <div className="case-card starter-case">
+
+                  <div className="case-glow">
+                    🎁
+                  </div>
+
+                  <div className="case-info">
+                    <span className="case-label">
+                      STARTER
+                    </span>
+
+                    <h3>
+                      Starter Case
+                    </h3>
+
+                    <p>
+                      Базовый кейс
+                      с подарком.
+                    </p>
+
+                    <div className="case-price">
+                      ⭐ 10
+                    </div>
+
+                    <button
+                      disabled={openingCase}
+                      onClick={() =>
+                        openCase('starter')
+                      }
+                    >
+                      Открыть кейс
+                    </button>
+                  </div>
+
+                </div>
+
+                <div className="case-card premium-case">
+
+                  <div className="case-glow">
+                    💎
+                  </div>
+
+                  <div className="case-info">
+                    <span className="case-label">
+                      PREMIUM
+                    </span>
+
+                    <h3>
+                      Premium Case
+                    </h3>
+
+                    <p>
+                      Премиальный кейс
+                      с ценным подарком.
+                    </p>
+
+                    <div className="case-price">
+                      ⭐ 50
+                    </div>
+
+                    <button
+                      disabled={openingCase}
+                      onClick={() =>
+                        openCase('premium')
+                      }
+                    >
+                      Открыть кейс
+                    </button>
+                  </div>
+
+                </div>
+
               </div>
             )}
 
-            <div className="cards">
-              <div className="card">
-                <h3>⭐ Starter Case</h3>
+            {!openingCase &&
+              lastReward && (
+                <div className="last-reward">
+                  <span>
+                    Последняя награда
+                  </span>
 
-                <p>
-                  Стоимость: 10 ⭐
-                </p>
-
-                <p>
-                  🎁 Common — 60%
-                  <br />
-                  💎 Rare — 30%
-                  <br />
-                  🔥 Epic — 10%
-                </p>
-
-                <button
-                  disabled={openingCase}
-                  onClick={() =>
-                    openCase('starter')
-                  }
-                >
-                  {openingCase
-                    ? 'Открываем...'
-                    : 'Открыть за 10 ⭐'}
-                </button>
-              </div>
-
-              <div className="card">
-                <h3>💎 Premium Case</h3>
-
-                <p>
-                  Стоимость: 50 ⭐
-                </p>
-
-                <p>
-                  💎 Rare — 55%
-                  <br />
-                  🔥 Epic — 30%
-                  <br />
-                  👑 Legendary — 15%
-                </p>
-
-                <button
-                  disabled={openingCase}
-                  onClick={() =>
-                    openCase('premium')
-                  }
-                >
-                  {openingCase
-                    ? 'Открываем...'
-                    : 'Открыть за 50 ⭐'}
-                </button>
-              </div>
-            </div>
+                  <strong>
+                    {getPrizeVisual(
+                      lastReward
+                    ).emoji}{' '}
+                    {lastReward.name}
+                  </strong>
+                </div>
+              )}
           </>
         )}
 
         {page === 'inventory' && (
           <>
-            <h2>🎒 Инвентарь</h2>
+            <div className="page-heading">
+              <h2>🎒 Инвентарь</h2>
+              <p>
+                Твои полученные подарки.
+              </p>
+            </div>
 
             {user?.inventory?.length ? (
-              <div className="cards">
+              <div className="inventory-grid">
+
                 {user.inventory
                   .slice()
                   .reverse()
-                  .map((item) => (
-                    <div
-                      className="card"
-                      key={item.id}
-                    >
-                      <h3>
-                        🎁 {item.name}
-                      </h3>
+                  .map((item) => {
+                    const visual =
+                      getPrizeVisual(item)
 
-                      <p>
-                        💎 Ценность:{' '}
-                        {item.value}
-                      </p>
+                    return (
+                      <div
+                        className={`inventory-item ${visual.className}`}
+                        key={item.id}
+                      >
+                        <div className="inventory-icon">
+                          {visual.emoji}
+                        </div>
 
-                      <p>
-                        📦 Кейс:{' '}
-                        {item.caseName}
-                      </p>
-                    </div>
-                  ))}
+                        <h3>
+                          {item.name}
+                        </h3>
+
+                        <p>
+                          💎 {item.value}
+                        </p>
+
+                        <small>
+                          📦 {item.caseName}
+                        </small>
+                      </div>
+                    )
+                  })}
+
               </div>
             ) : (
               <div className="empty">
-                <div>🎁</div>
+                <div className="empty-icon">
+                  🎁
+                </div>
 
                 <p>
                   Инвентарь пока пуст.
@@ -503,31 +739,54 @@ function App() {
 
         {page === 'profile' && (
           <>
-            <h2>👤 Профиль</h2>
+            <div className="page-heading">
+              <h2>👤 Профиль</h2>
+              <p>
+                Информация о твоём
+                Telegram аккаунте.
+              </p>
+            </div>
 
             <div className="profile">
+
+              <div className="profile-avatar">
+                {user?.firstName
+                  ?.charAt(0)
+                  ?.toUpperCase() || 'U'}
+              </div>
+
               <p>
-                <b>Имя:</b>{' '}
-                {user?.firstName ||
-                  'Не определено'}
+                <b>Имя</b>
+                <span>
+                  {user?.firstName ||
+                    'Не определено'}
+                </span>
               </p>
 
               <p>
-                <b>Username:</b>{' '}
-                {user?.username
-                  ? `@${user.username}`
-                  : 'Не указан'}
+                <b>Username</b>
+                <span>
+                  {user?.username
+                    ? `@${user.username}`
+                    : 'Не указан'}
+                </span>
               </p>
 
               <p>
-                <b>Telegram ID:</b>{' '}
-                {user?.telegramId ||
-                  'Не определён'}
+                <b>Telegram ID</b>
+                <span>
+                  {user?.telegramId ||
+                    'Не определён'}
+                </span>
               </p>
 
               <p>
-                <b>Баланс:</b> ⭐ {balance}
+                <b>Баланс</b>
+                <span>
+                  ⭐ {balance}
+                </span>
               </p>
+
             </div>
           </>
         )}
@@ -535,7 +794,13 @@ function App() {
         {page === 'admin' &&
           isAdmin && (
             <>
-              <h2>🛡️ Админ-панель</h2>
+              <div className="page-heading">
+                <h2>🛡️ Админ-панель</h2>
+                <p>
+                  Управление пользователями
+                  VeltoGifts.
+                </p>
+              </div>
 
               <button
                 className="main-button"
@@ -552,7 +817,9 @@ function App() {
                 </div>
               ) : users.length === 0 ? (
                 <div className="empty">
-                  <div>👥</div>
+                  <div>
+                    👥
+                  </div>
 
                   <p>
                     Пользователей пока нет.
@@ -560,9 +827,10 @@ function App() {
                 </div>
               ) : (
                 <div className="cards">
+
                   {users.map((item) => (
                     <div
-                      className="card"
+                      className="card admin-user"
                       key={item.telegramId}
                     >
                       <h3>
@@ -623,14 +891,22 @@ function App() {
                       </button>
                     </div>
                   ))}
+
                 </div>
               )}
             </>
           )}
+
       </main>
 
       <nav className="bottom-nav">
+
         <button
+          className={
+            page === 'home'
+              ? 'active'
+              : ''
+          }
           onClick={() =>
             setPage('home')
           }
@@ -640,6 +916,11 @@ function App() {
         </button>
 
         <button
+          className={
+            page === 'cases'
+              ? 'active'
+              : ''
+          }
           onClick={() =>
             setPage('cases')
           }
@@ -649,6 +930,11 @@ function App() {
         </button>
 
         <button
+          className={
+            page === 'inventory'
+              ? 'active'
+              : ''
+          }
           onClick={() =>
             setPage('inventory')
           }
@@ -658,6 +944,11 @@ function App() {
         </button>
 
         <button
+          className={
+            page === 'profile'
+              ? 'active'
+              : ''
+          }
           onClick={() =>
             setPage('profile')
           }
@@ -665,7 +956,59 @@ function App() {
           👤
           <span>Профиль</span>
         </button>
+
       </nav>
+
+      {showResult && lastReward && (
+        <div
+          className="result-overlay"
+          onClick={closeResult}
+        >
+          <div
+            className="result-modal"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+            <div className="result-sparkles">
+              ✨
+            </div>
+
+            <div className="result-icon">
+              {
+                getPrizeVisual(
+                  lastReward
+                ).emoji
+              }
+            </div>
+
+            <div className="result-label">
+              ПОЗДРАВЛЯЕМ
+            </div>
+
+            <h2>
+              {lastReward.name}
+            </h2>
+
+            <p>
+              🎁 Подарок добавлен
+              в твой инвентарь
+            </p>
+
+            <div className="result-value">
+              💎 {lastReward.value}
+            </div>
+
+            <button
+              className="main-button"
+              onClick={closeResult}
+            >
+              Забрать
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
