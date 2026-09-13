@@ -554,11 +554,23 @@ const spinRoulette = async () => {
   }
 
   const getPrizeVisual = (reward) => {
-    return (
-      PRIZE_VISUALS[reward?.id] ||
-      PRIZE_VISUALS.common
-    )
+  const telegramGift = telegramGifts.find(
+    gift => String(gift.id) === String(reward?.id)
+  )
+
+  if (telegramGift) {
+    return {
+      image: `${API_URL}${telegramGift.image}`,
+      title: telegramGift.name,
+      className: 'telegram-gift'
+    }
   }
+
+  return (
+    PRIZE_VISUALS[reward?.id] ||
+    PRIZE_VISUALS.common
+  )
+}
 
   return (
     <div className="app">
