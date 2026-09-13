@@ -43,6 +43,23 @@ const REEL_ITEMS = [
 
 function App() {
   const [page, setPage] = useState('home')
+  const [telegramGifts, setTelegramGifts] = useState([])
+useEffect(() => {
+  const loadTelegramGifts = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/telegram/gifts`)
+      const data = await response.json()
+
+      if (data.ok) {
+        setTelegramGifts(data.gifts || [])
+      }
+    } catch (error) {
+      console.error('Telegram gifts loading error:', error)
+    }
+  }
+
+  loadTelegramGifts()
+}, [])
   const [balance, setBalance] = useState(0)
   const [user, setUser] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
