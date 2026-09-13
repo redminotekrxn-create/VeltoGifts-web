@@ -390,10 +390,91 @@ function App() {
     setShowResult(false)
   }
 
-  const spinRoulette = () => {
-    alert(
-      'Бесплатная рулетка пока находится в разработке 🎡'
-    )
+  const spinRoulette = async () => {
+    if (openingCase) {
+      return
+    }
+
+    const tg = getTelegram()
+
+    if (!tg?.initData) {
+      alert('Открой приложение через Telegram')
+      return
+    }
+
+    setOpeningCase(true)
+    setShowResult(false)
+    setLastReward(null)
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/roulette/free`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            initData: tg.initData
+          })
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok || !data.ok) {
+        if (data.remainingMs) {
+          const totalMinutes = Math.ceil(
+            data.remainingMs / 1000 / 60
+          )
+
+          const hours = Math.floor(
+            totalMinutes / 60
+          )
+
+          const minutes = totalMinutes % 60
+
+          alert(
+            `Рулетка уже использована.\nСледующая попытка через ${hours} ч ${minutes} мин.`
+          )
+
+          return
+        }
+
+        alert(
+          data.error ||
+          'Не удалось запустить рулетку'
+        )
+
+        return
+      }
+
+      setBalance(data.balance)
+
+      if (user) {
+        setUser({
+          ...user,
+          balance: data.balance,
+          inventory:
+            data.inventory ||
+            user.inventory
+        })
+      }
+
+      await animateToReward(data.reward)
+
+      setLastReward(data.reward)
+      setShowResult(true)
+
+    } catch (error) {
+      console.error(error)
+
+      alert(
+        'Ошибка соединения с сервером'
+      )
+    } finally {
+      setOpeningCase(false)
+    }
   }
 
   const getPrizeVisual = (reward) => {
@@ -450,9 +531,12 @@ function App() {
             <button
               className="main-button roulette-button"
               onClick={spinRoulette}
+              disabled={openingCase}
             >
               <span>🎡</span>
-              Бесплатная рулетка
+              {openingCase
+                ? 'Рулетка крутится...'
+                : 'Бесплатная рулетка'}
             </button>
 
             <div className="cards">
