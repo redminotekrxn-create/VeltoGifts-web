@@ -1028,3 +1028,59 @@ button:disabled {
     flex-basis: 110px;
   }
 }
+.reel-icon img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 8px 18px rgba(255, 255, 255, 0.18));
+}
+
+.case-glow img {
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 12px 30px rgba(255, 255, 255, 0.2));
+}
+
+.inventory-icon img {
+  width: 82px;
+  height: 82px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+.last-reward strong {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.last-reward strong img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.result-icon img {
+  width: 130px;
+  height: 130px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  filter: drop-shadow(0 15px 35px rgba(255, 255, 255, 0.25));
+}
+
+.reel-item {
+  flex: 0 0 118px;
+  width: 118px;
+}
+
+.reel-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 82px;
+}

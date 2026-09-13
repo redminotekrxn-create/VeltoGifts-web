@@ -1,40 +1,44 @@
 import { useEffect, useState } from 'react'
-import './App.css'
+
+import commonGift from './assets/gifts/common.svg'
+import rareGift from './assets/gifts/rare.svg'
+import epicGift from './assets/gifts/epic.svg'
+import legendaryGift from './assets/gifts/legendary.svg'
 
 const API_URL = 'https://velto-gifts-api.vercel.app'
 
 const PRIZE_VISUALS = {
   common: {
-    emoji: '🎁',
+    image: commonGift,
     title: 'Common Gift',
     className: 'common'
   },
   rare: {
-    emoji: '💎',
+    image: rareGift,
     title: 'Rare Gift',
     className: 'rare'
   },
   epic: {
-    emoji: '🔥',
+    image: epicGift,
     title: 'Epic Gift',
     className: 'epic'
   },
   legendary: {
-    emoji: '👑',
+    image: legendaryGift,
     title: 'Legendary Gift',
     className: 'legendary'
   }
 }
 
 const REEL_ITEMS = [
-  { id: 'common', emoji: '🎁', name: 'Common Gift' },
-  { id: 'rare', emoji: '💎', name: 'Rare Gift' },
-  { id: 'epic', emoji: '🔥', name: 'Epic Gift' },
-  { id: 'legendary', emoji: '👑', name: 'Legendary Gift' },
-  { id: 'common', emoji: '🎁', name: 'Common Gift' },
-  { id: 'rare', emoji: '💎', name: 'Rare Gift' },
-  { id: 'epic', emoji: '🔥', name: 'Epic Gift' },
-  { id: 'legendary', emoji: '👑', name: 'Legendary Gift' }
+  { id: 'common', name: 'Common Gift' },
+  { id: 'rare', name: 'Rare Gift' },
+  { id: 'epic', name: 'Epic Gift' },
+  { id: 'legendary', name: 'Legendary Gift' },
+  { id: 'common', name: 'Common Gift' },
+  { id: 'rare', name: 'Rare Gift' },
+  { id: 'epic', name: 'Epic Gift' },
+  { id: 'legendary', name: 'Legendary Gift' }
 ]
 
 function App() {
@@ -261,7 +265,6 @@ function App() {
 
     const resultItem = {
       id: reward?.id || 'common',
-      emoji: visual.emoji,
       name: reward?.name || visual.title,
       value: reward?.value || 0
     }
@@ -295,6 +298,7 @@ function App() {
     )
 
     const itemWidth = 118
+
     const targetOffset =
       -(winnerIndex * itemWidth) + 150
 
@@ -349,6 +353,7 @@ function App() {
           data.error ||
           'Не удалось открыть кейс'
         )
+
         setOpeningCase(false)
         return
       }
@@ -514,6 +519,7 @@ function App() {
           <>
             <div className="page-heading">
               <h2>🎁 Кейсы</h2>
+
               <p>
                 Выбери кейс и посмотри,
                 что внутри.
@@ -534,17 +540,21 @@ function App() {
                   </div>
 
                   <div className="reel-window">
+
                     <div
                       className="reel-track"
                       style={{
                         transform:
                           `translateX(${reelOffset}px)`,
+
                         transition:
                           reelTransition
                       }}
                     >
+
                       {reelItems.map(
                         (item) => {
+
                           const visual =
                             PRIZE_VISUALS[
                               item.id
@@ -556,18 +566,25 @@ function App() {
                               className={`reel-item ${visual.className}`}
                               key={item.key}
                             >
+
                               <div className="reel-icon">
-                                {item.emoji}
+                                <img
+                                  src={visual.image}
+                                  alt={item.name}
+                                />
                               </div>
 
                               <div className="reel-name">
                                 {item.name}
                               </div>
+
                             </div>
                           )
                         }
                       )}
+
                     </div>
+
                   </div>
 
                   <div className="reel-pointer bottom">
@@ -580,6 +597,7 @@ function App() {
                   Результат определяется
                   сервером
                 </p>
+
               </section>
             )}
 
@@ -589,10 +607,14 @@ function App() {
                 <div className="case-card starter-case">
 
                   <div className="case-glow">
-                    🎁
+                    <img
+                      src={commonGift}
+                      alt="Common Gift"
+                    />
                   </div>
 
                   <div className="case-info">
+
                     <span className="case-label">
                       STARTER
                     </span>
@@ -618,6 +640,7 @@ function App() {
                     >
                       Открыть кейс
                     </button>
+
                   </div>
 
                 </div>
@@ -625,10 +648,14 @@ function App() {
                 <div className="case-card premium-case">
 
                   <div className="case-glow">
-                    💎
+                    <img
+                      src={rareGift}
+                      alt="Rare Gift"
+                    />
                   </div>
 
                   <div className="case-info">
+
                     <span className="case-label">
                       PREMIUM
                     </span>
@@ -654,6 +681,7 @@ function App() {
                     >
                       Открыть кейс
                     </button>
+
                   </div>
 
                 </div>
@@ -664,37 +692,55 @@ function App() {
             {!openingCase &&
               lastReward && (
                 <div className="last-reward">
+
                   <span>
                     Последняя награда
                   </span>
 
                   <strong>
-                    {getPrizeVisual(
-                      lastReward
-                    ).emoji}{' '}
+
+                    <img
+                      src={
+                        getPrizeVisual(
+                          lastReward
+                        ).image
+                      }
+                      alt={lastReward.name}
+                    />
+
                     {lastReward.name}
+
                   </strong>
+
                 </div>
               )}
+
           </>
         )}
 
         {page === 'inventory' && (
           <>
             <div className="page-heading">
-              <h2>🎒 Инвентарь</h2>
+
+              <h2>
+                🎒 Инвентарь
+              </h2>
+
               <p>
                 Твои полученные подарки.
               </p>
+
             </div>
 
             {user?.inventory?.length ? (
+
               <div className="inventory-grid">
 
                 {user.inventory
                   .slice()
                   .reverse()
                   .map((item) => {
+
                     const visual =
                       getPrizeVisual(item)
 
@@ -703,8 +749,14 @@ function App() {
                         className={`inventory-item ${visual.className}`}
                         key={item.id}
                       >
+
                         <div className="inventory-icon">
-                          {visual.emoji}
+
+                          <img
+                            src={visual.image}
+                            alt={item.name}
+                          />
+
                         </div>
 
                         <h3>
@@ -718,13 +770,17 @@ function App() {
                         <small>
                           📦 {item.caseName}
                         </small>
+
                       </div>
                     )
                   })}
 
               </div>
+
             ) : (
+
               <div className="empty">
+
                 <div className="empty-icon">
                   🎁
                 </div>
@@ -732,31 +788,42 @@ function App() {
                 <p>
                   Инвентарь пока пуст.
                 </p>
+
               </div>
+
             )}
+
           </>
         )}
 
         {page === 'profile' && (
           <>
             <div className="page-heading">
-              <h2>👤 Профиль</h2>
+
+              <h2>
+                👤 Профиль
+              </h2>
+
               <p>
                 Информация о твоём
                 Telegram аккаунте.
               </p>
+
             </div>
 
             <div className="profile">
 
               <div className="profile-avatar">
+
                 {user?.firstName
                   ?.charAt(0)
                   ?.toUpperCase() || 'U'}
+
               </div>
 
               <p>
                 <b>Имя</b>
+
                 <span>
                   {user?.firstName ||
                     'Не определено'}
@@ -765,6 +832,7 @@ function App() {
 
               <p>
                 <b>Username</b>
+
                 <span>
                   {user?.username
                     ? `@${user.username}`
@@ -774,6 +842,7 @@ function App() {
 
               <p>
                 <b>Telegram ID</b>
+
                 <span>
                   {user?.telegramId ||
                     'Не определён'}
@@ -782,6 +851,7 @@ function App() {
 
               <p>
                 <b>Баланс</b>
+
                 <span>
                   ⭐ {balance}
                 </span>
@@ -795,11 +865,16 @@ function App() {
           isAdmin && (
             <>
               <div className="page-heading">
-                <h2>🛡️ Админ-панель</h2>
+
+                <h2>
+                  🛡️ Админ-панель
+                </h2>
+
                 <p>
                   Управление пользователями
                   VeltoGifts.
                 </p>
+
               </div>
 
               <button
@@ -810,13 +885,17 @@ function App() {
               </button>
 
               {adminLoading ? (
+
                 <div className="empty">
                   <p>
                     Загрузка пользователей...
                   </p>
                 </div>
+
               ) : users.length === 0 ? (
+
                 <div className="empty">
+
                   <div>
                     👥
                   </div>
@@ -824,15 +903,20 @@ function App() {
                   <p>
                     Пользователей пока нет.
                   </p>
+
                 </div>
+
               ) : (
+
                 <div className="cards">
 
                   {users.map((item) => (
+
                     <div
                       className="card admin-user"
                       key={item.telegramId}
                     >
+
                       <h3>
                         👤{' '}
                         {item.firstName ||
@@ -889,11 +973,15 @@ function App() {
                           ? '🔓 Разблокировать'
                           : '🚫 Заблокировать'}
                       </button>
+
                     </div>
+
                   ))}
 
                 </div>
+
               )}
+
             </>
           )}
 
@@ -912,7 +1000,9 @@ function App() {
           }
         >
           🏠
-          <span>Главная</span>
+          <span>
+            Главная
+          </span>
         </button>
 
         <button
@@ -926,7 +1016,9 @@ function App() {
           }
         >
           🎁
-          <span>Кейсы</span>
+          <span>
+            Кейсы
+          </span>
         </button>
 
         <button
@@ -940,7 +1032,9 @@ function App() {
           }
         >
           🎒
-          <span>Инвентарь</span>
+          <span>
+            Инвентарь
+          </span>
         </button>
 
         <button
@@ -954,32 +1048,42 @@ function App() {
           }
         >
           👤
-          <span>Профиль</span>
+          <span>
+            Профиль
+          </span>
         </button>
 
       </nav>
 
       {showResult && lastReward && (
+
         <div
           className="result-overlay"
           onClick={closeResult}
         >
+
           <div
             className="result-modal"
             onClick={(e) =>
               e.stopPropagation()
             }
           >
+
             <div className="result-sparkles">
               ✨
             </div>
 
             <div className="result-icon">
-              {
-                getPrizeVisual(
-                  lastReward
-                ).emoji
-              }
+
+              <img
+                src={
+                  getPrizeVisual(
+                    lastReward
+                  ).image
+                }
+                alt={lastReward.name}
+              />
+
             </div>
 
             <div className="result-label">
@@ -1005,8 +1109,11 @@ function App() {
             >
               Забрать
             </button>
+
           </div>
+
         </div>
+
       )}
 
     </div>
