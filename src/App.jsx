@@ -569,24 +569,7 @@ const spinRoulette = async () => {
         </div>
       </header>
 
-      <main className="content"><section className="telegram-gifts-section">
-  <h2>🎁 Подарки Telegram</h2>
-
-  <div className="telegram-gifts-grid">
-    {telegramGifts.map((gift) => (
-      <div className="telegram-gift-card" key={gift.id}>
-        <img
-          src={`${API_URL}${gift.image}`}
-          alt={gift.name}
-        />
-
-        <div>{gift.name}</div>
-        <div>⭐ {gift.starCount}</div>
-        <small>ID: {gift.id}</small>
-      </div>
-    ))}
-  </div>
-</section>
+      <main className="content">
 
         {page === 'home' && (
           <>
