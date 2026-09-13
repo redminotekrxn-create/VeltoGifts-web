@@ -586,14 +586,23 @@ const spinRoulette = async () => {
         </div>
       </header>
 
-      <main className="content">
+      <main className="content"> 
 {telegramGifts.length > 0 && (
   <div style={{ padding: '16px' }}>
+    <img
+      src={`${API_URL}${telegramGifts[0].image}`}
+      alt={telegramGifts[0].name}
+      style={{
+        width: '120px',
+        height: '120px',
+        objectFit: 'contain'
+      }}
+    />
+
     <div>{telegramGifts[0].name}</div>
     <div>⭐ {telegramGifts[0].starCount}</div>
   </div>
 )}
-
         {page === 'home' && (
           <>
             <section className="hero">
