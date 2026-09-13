@@ -587,6 +587,12 @@ const spinRoulette = async () => {
       </header>
 
       <main className="content">
+{telegramGifts.length > 0 && (
+  <div style={{ padding: '16px' }}>
+    <div>{telegramGifts[0].name}</div>
+    <div>⭐ {telegramGifts[0].starCount}</div>
+  </div>
+)}
 
         {page === 'home' && (
           <>
