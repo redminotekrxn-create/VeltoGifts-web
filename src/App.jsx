@@ -115,11 +115,9 @@ useEffect(() => {
       const response = await fetch(`${API_URL}/api/user`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          initData: tg.initData
-        })
+  'Content-Type': 'application/json',
+  'x-telegram-init-data': tg.initData
+}
       })
 
       const data = await response.json()
