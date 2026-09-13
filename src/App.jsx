@@ -60,6 +60,23 @@ function App() {
 
   useEffect(() => {
     loadUser()
+  }, []) 
+ 
+   useEffect(() => {
+    const loadTelegramGifts = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/telegram/gifts`)
+        const data = await response.json()
+
+        if (data.ok) {
+          setTelegramGifts(data.gifts || [])
+        }
+      } catch (error) {
+        console.error('Telegram gifts loading error:', error)
+      }
+    }
+
+    loadTelegramGifts()
   }, [])
 
   const getTelegram = () => {
@@ -425,7 +442,9 @@ function App() {
 
     alert(`🎉 Промокод активирован!\n\n⭐ +${data.rewardStars} VeltoStars`)
 
-    await loadUser()
+    if (typeof data.balance === 'number') {
+  setBalance(data.balance)
+}
   } catch (error) {
     console.error('Promo activation error:', error)
     alert('Ошибка соединения с сервером')
