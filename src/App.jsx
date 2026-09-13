@@ -588,21 +588,164 @@ const spinRoulette = async () => {
 
       <main className="content"> 
 {telegramGifts.length > 0 && (
-  <div style={{ padding: '16px' }}>
-    <img
-      src={`${API_URL}${telegramGifts[0].image}`}
-      alt={telegramGifts[0].name}
+  <section
+    style={{
+      padding: '18px 16px',
+      marginBottom: '8px'
+    }}
+  >
+    <div
       style={{
-        width: '120px',
-        height: '120px',
-        objectFit: 'contain'
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '14px'
       }}
-    />
+    >
+      <div>
+        <div
+          style={{
+            fontSize: '20px',
+            fontWeight: '800',
+            color: '#fff'
+          }}
+        >
+          🎁 Telegram Gifts
+        </div>
 
-    <div>{telegramGifts[0].name}</div>
-    <div>⭐ {telegramGifts[0].starCount}</div>
-  </div>
+        <div
+          style={{
+            marginTop: '4px',
+            fontSize: '12px',
+            color: 'rgba(255,255,255,0.5)'
+          }}
+        >
+          Реальные подарки из Telegram
+        </div>
+      </div>
+
+      <div
+        style={{
+          padding: '6px 10px',
+          borderRadius: '12px',
+          background: 'rgba(255,255,255,0.08)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          fontSize: '12px',
+          color: 'rgba(255,255,255,0.7)'
+        }}
+      >
+        {telegramGifts.length} шт.
+      </div>
+    </div>
+
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+        gap: '12px'
+      }}
+    >
+      {telegramGifts.map((gift) => (
+        <div
+          key={gift.id}
+          style={{
+            position: 'relative',
+            overflow: 'hidden',
+            minHeight: '205px',
+            padding: '14px',
+            borderRadius: '20px',
+            background:
+              'linear-gradient(145deg, rgba(255,255,255,0.10), rgba(255,255,255,0.035))',
+            border: '1px solid rgba(255,255,255,0.09)',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.22)'
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              top: '-35px',
+              right: '-35px',
+              width: '90px',
+              height: '90px',
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.06)',
+              filter: 'blur(8px)'
+            }}
+          />
+
+          <div
+            style={{
+              height: '120px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative'
+            }}
+          >
+            <img
+              src={`${API_URL}${gift.image}`}
+              alt={gift.name}
+              loading="lazy"
+              style={{
+                width: '110px',
+                height: '110px',
+                objectFit: 'contain',
+                filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.35))'
+              }}
+            />
+          </div>
+
+          <div
+            style={{
+              position: 'relative',
+              marginTop: '8px',
+              fontSize: '14px',
+              fontWeight: '700',
+              color: '#fff',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}
+          >
+            {gift.name}
+          </div>
+
+          <div
+            style={{
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: '8px'
+            }}
+          >
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: '800',
+                color: '#ffd84d'
+              }}
+            >
+              ⭐ {gift.starCount}
+            </span>
+
+            {gift.remainingCount && (
+              <span
+                style={{
+                  fontSize: '10px',
+                  color: 'rgba(255,255,255,0.45)'
+                }}
+              >
+                Осталось: {gift.remainingCount}
+              </span>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
 )}
+
         {page === 'home' && (
           <>
             <section className="hero">
