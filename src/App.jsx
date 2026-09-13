@@ -96,7 +96,13 @@ useEffect(() => {
     loadTelegramGifts()
   }, [])
 
-  const getTelegram = () => {
+   const getCaseGift = (giftId) => {
+    return telegramGifts.find(
+      gift => String(gift.id) === String(giftId)
+    )
+  }
+
+ const getTelegram = () => {
     return window.Telegram?.WebApp
   }
 
@@ -692,7 +698,7 @@ const spinRoulette = async () => {
               position: 'relative'
             }}
           >
-            <img
+             <img
               src={`${API_URL}${gift.image}`}
               alt={gift.name}
               loading="lazy"
@@ -944,10 +950,17 @@ const spinRoulette = async () => {
                 <div className="case-card starter-case">
 
                   <div className="case-glow">
-                    <img
-                      src={commonGift}
-                      alt="Common Gift"
-                    />
+{getCaseGift('5170145012310081615') ? (
+  <img
+    src={`${API_URL}${getCaseGift('5170145012310081615').image}`}
+    alt={getCaseGift('5170145012310081615').name}
+  />
+) : (
+  <img
+    src={commonGift}
+    alt="Telegram Gift"
+  />
+)}
                   </div>
 
                   <div className="case-info">
@@ -985,10 +998,17 @@ const spinRoulette = async () => {
                 <div className="case-card premium-case">
 
                   <div className="case-glow">
-                    <img
-                      src={rareGift}
-                      alt="Rare Gift"
-                    />
+                    {getCaseGift('5170144170496491616') ? (
+  <img
+    src={`${API_URL}${getCaseGift('5170144170496491616').image}`}
+    alt={getCaseGift('5170144170496491616').name}
+  />
+) : (
+  <img
+    src={rareGift}
+    alt="Telegram Gift"
+  />
+)}
                   </div>
 
                   <div className="case-info">
