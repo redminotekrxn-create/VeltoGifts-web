@@ -41,31 +41,6 @@ const REEL_ITEMS = [
   { id: 'legendary', name: 'Legendary Gift' }
 ]
 
-function TelegramGifts({ gifts }) {
-  if (!gifts?.length) {
-    return null
-  }
-
-  return (
-    <section className="telegram-gifts-section">
-      <h2>🎁 Подарки Telegram</h2>
-
-      <div className="telegram-gifts-grid">
-        {gifts.map((gift) => (
-          <div className="telegram-gift-card" key={gift.id}>
-            <img
-              src={`${API_URL}${gift.image}`}
-              alt={gift.name}
-            />
-
-            <div>{gift.name}</div>
-            <div>⭐ {gift.starCount}</div>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
-}
 function App() {
   const [page, setPage] = useState('home')
   const [balance, setBalance] = useState(0)
@@ -595,7 +570,6 @@ const spinRoulette = async () => {
       </header>
 
       <main className="content">
-<TelegramGifts gifts={telegramGifts} />
 
         {page === 'home' && (
           <>
