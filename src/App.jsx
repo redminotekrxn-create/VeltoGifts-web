@@ -390,7 +390,49 @@ function App() {
     setShowResult(false)
   }
 
-  const spinRoulette = async () => {
+  const activatePromo = async () => {
+  const tg = getTelegram()
+
+  if (!tg?.initData) {
+    alert('Открой приложение через Telegram')
+    return
+  }
+
+  const code = window.prompt('Введите промокод')
+
+  if (!code?.trim()) {
+    return
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/promo/activate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-telegram-init-data': tg.initData
+      },
+      body: JSON.stringify({
+        code: code.trim()
+      })
+    })
+
+    const data = await response.json()
+
+    if (!response.ok || !data.ok) {
+      alert(data.error || 'Не удалось активировать промокод')
+      return
+    }
+
+    alert(`🎉 Промокод активирован!\n\n⭐ +${data.rewardStars} VeltoStars`)
+
+    await loadUser()
+  } catch (error) {
+    console.error('Promo activation error:', error)
+    alert('Ошибка соединения с сервером')
+  }
+}
+
+const spinRoulette = async () => {
     if (openingCase) {
       return
     }
@@ -539,6 +581,13 @@ function App() {
                 : 'Бесплатная рулетка'}
             </button>
 
+            <button
+              className="main-button"
+              onClick={activatePromo}
+            >
+              <span>🎟️</span>
+              Активировать промокод
+            </button>
             <div className="cards">
 
               <div className="card feature-card">
