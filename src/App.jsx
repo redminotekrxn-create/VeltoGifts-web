@@ -1437,8 +1437,8 @@ const spinRoulette = async () => {
             </p>
 
             <div className="result-value">
-              💎 {lastReward.value}
-            </div>
+  ⭐ {lastReward.value}
+</div>
 
             <button
               className="main-button"
