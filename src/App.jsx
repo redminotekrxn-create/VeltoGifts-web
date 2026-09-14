@@ -43,29 +43,14 @@ const REEL_ITEMS = [
 
 function App() {
   const [page, setPage] = useState('home')
-  const [telegramGifts, setTelegramGifts] = useState([])
-useEffect(() => {
-  const loadTelegramGifts = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/telegram/gifts`)
-      const data = await response.json()
-
-      if (data.ok) {
-        setTelegramGifts(data.gifts || [])
-      }
-    } catch (error) {
-      console.error('Telegram gifts loading error:', error)
-    }
-  }
-
-  loadTelegramGifts()
-}, [])
   const [balance, setBalance] = useState(0)
   const [user, setUser] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
-  const [adminLoading, setAdminLoading] = useState(false)
+  const [adminLoading, setAdminLoading] = useState(false) 
+  const [cases, setCases] = useState([])
+  const [casesLoading, setCasesLoading] = useState(true)
 
   const [openingCase, setOpeningCase] = useState(false)
   const [lastReward, setLastReward] = useState(null)
@@ -77,32 +62,10 @@ useEffect(() => {
 
   useEffect(() => {
     loadUser()
-  }, []) 
- 
-   useEffect(() => {
-    const loadTelegramGifts = async () => {
-      try {
-        const response = await fetch(`${API_URL}/api/telegram/gifts`)
-        const data = await response.json()
-
-        if (data.ok) {
-          setTelegramGifts(data.gifts || [])
-        }
-      } catch (error) {
-        console.error('Telegram gifts loading error:', error)
-      }
-    }
-
-    loadTelegramGifts()
+    loadCases()
   }, [])
 
-   const getCaseGift = (giftId) => {
-    return telegramGifts.find(
-      gift => String(gift.id) === String(giftId)
-    )
-  }
-
- const getTelegram = () => {
+  const getTelegram = () => {
     return window.Telegram?.WebApp
   }
 
@@ -121,9 +84,11 @@ useEffect(() => {
       const response = await fetch(`${API_URL}/api/user`, {
         method: 'POST',
         headers: {
-  'Content-Type': 'application/json',
-  'x-telegram-init-data': tg.initData
-}
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          initData: tg.initData
+        })
       })
 
       const data = await response.json()
@@ -154,7 +119,24 @@ useEffect(() => {
     }
   }
 
-  const loadUsers = async () => {
+  const loadUsers = async () => {const loadCases = async () => {
+  try {
+    setCasesLoading(true)
+
+    const response = await fetch(`${API_URL}/api/cases`)
+    const data = await response.json()
+
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || 'Не удалось загрузить кейсы')
+    }
+
+    setCases(Object.values(data.cases || {}))
+  } catch (error) {
+    console.error('Cases API error:', error)
+  } finally {
+    setCasesLoading(false)
+  }
+}
     try {
       setAdminLoading(true)
 
@@ -295,45 +277,48 @@ useEffect(() => {
       alert('Ошибка соединения с API')
     }
   }
+const prepareReel = (reward, currentCase) => {
+  const caseGifts = currentCase?.gifts || []
 
-  const prepareReel = (reward) => {
-    const visual =
-      PRIZE_VISUALS[reward?.id] ||
-      PRIZE_VISUALS.common
+  const reelGifts = caseGifts.map((gift) => ({
+    id: String(gift.giftId),
+    name: '🎁',
+    value: 0,
+    image: `${API_URL}/api/telegram/gift-image/${encodeURIComponent(gift.giftId)}`
+  }))
 
-    const resultItem = {
-      id: reward?.id || 'common',
-      name: reward?.name || visual.title,
-      value: reward?.value || 0
-    }
-
-    const items = []
-
-    for (let i = 0; i < 28; i++) {
-      items.push({
-        ...REEL_ITEMS[i % REEL_ITEMS.length],
-        key: `${i}-${Math.random()}`
-      })
-    }
-
-    items.push({
-      ...resultItem,
-      key: `winner-${Date.now()}`
-    })
-
-    setReelItems(items)
-    setReelOffset(0)
-    setReelTransition('none')
-
-    return items.length - 1
+  if (!reelGifts.length) {
+    setReelItems(REEL_ITEMS)
+    return 0
   }
 
-  const animateToReward = async (reward) => {
-    const winnerIndex = prepareReel(reward)
+  const items = []
 
-    await new Promise(resolve =>
-      requestAnimationFrame(resolve)
-    )
+  for (let i = 0; i < 28; i++) {
+    items.push({
+      ...reelGifts[i % reelGifts.length],
+      key: `${i}-${Math.random()}`
+    })
+  }
+
+  const winnerIndex = 24
+
+  items[winnerIndex] = {
+    id: String(reward?.id || ''),
+    name: reward?.name || '🎁',
+    value: reward?.value || 0,
+    image: reward?.image
+      ? `${API_URL}${reward.image}`
+      : `${API_URL}/api/telegram/gift-image/${encodeURIComponent(reward?.id || '')}`,
+    key: `winner-${Math.random()}`
+  }
+
+  setReelItems(items)
+
+  return winnerIndex
+}
+  const animateToReward = async (reward, currentCase) => {
+  const winnerIndex = prepareReel(reward, currentCase)
 
     const itemWidth = 118
 
@@ -408,7 +393,11 @@ useEffect(() => {
         })
       }
 
-      await animateToReward(data.reward)
+      const currentCase = cases.find(
+  (item) => item.id === caseId
+)
+
+await animateToReward(data.reward, currentCase)
 
       setLastReward(data.reward)
       setShowResult(true)
@@ -428,51 +417,7 @@ useEffect(() => {
     setShowResult(false)
   }
 
-  const activatePromo = async () => {
-  const tg = getTelegram()
-
-  if (!tg?.initData) {
-    alert('Открой приложение через Telegram')
-    return
-  }
-
-  const code = window.prompt('Введите промокод')
-
-  if (!code?.trim()) {
-    return
-  }
-
-  try {
-    const response = await fetch(`${API_URL}/api/promo/activate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-telegram-init-data': tg.initData
-      },
-      body: JSON.stringify({
-        code: code.trim()
-      })
-    })
-
-    const data = await response.json()
-
-    if (!response.ok || !data.ok) {
-      alert(data.error || 'Не удалось активировать промокод')
-      return
-    }
-
-    alert(`🎉 Промокод активирован!\n\n⭐ +${data.rewardStars} VeltoStars`)
-
-    if (typeof data.balance === 'number') {
-  setBalance(data.balance)
-}
-  } catch (error) {
-    console.error('Promo activation error:', error)
-    alert('Ошибка соединения с сервером')
-  }
-}
-
-const spinRoulette = async () => {
+  const spinRoulette = async () => {
     if (openingCase) {
       return
     }
@@ -543,7 +488,11 @@ const spinRoulette = async () => {
         })
       }
 
-      await animateToReward(data.reward)
+      const currentCase = cases.find(
+  (item) => item.id === caseId
+)
+
+await animateToReward(data.reward, currentCase)
 
       setLastReward(data.reward)
       setShowResult(true)
@@ -560,25 +509,18 @@ const spinRoulette = async () => {
   }
 
   const getPrizeVisual = (reward) => {
-  const telegramGift = telegramGifts.find(
-    gift => String(gift.id) === String(reward?.id)
-  )
+    return (
+      PRIZE_VISUALS[reward?.id] ||
+      PRIZE_VISUALS.common
+    )
+  }
 
-  if (telegramGift) {
-    return {
-      image: `${API_URL}${telegramGift.image}`,
-      title: telegramGift.name,
-      className: 'telegram-gift'
-    }
+  const getCaseGift = (id) => {
+    return PRIZE_VISUALS[id] || null
   }
 
   return (
-    PRIZE_VISUALS[reward?.id] ||
-    PRIZE_VISUALS.common
-  )
-}
 
-  return (
     <div className="app">
 
       <header className="header">
@@ -602,165 +544,7 @@ const spinRoulette = async () => {
         </div>
       </header>
 
-      <main className="content"> 
-{telegramGifts.length > 0 && (
-  <section
-    style={{
-      padding: '18px 16px',
-      marginBottom: '8px'
-    }}
-  >
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: '14px'
-      }}
-    >
-      <div>
-        <div
-          style={{
-            fontSize: '20px',
-            fontWeight: '800',
-            color: '#fff'
-          }}
-        >
-          🎁 Telegram Gifts
-        </div>
-
-        <div
-          style={{
-            marginTop: '4px',
-            fontSize: '12px',
-            color: 'rgba(255,255,255,0.5)'
-          }}
-        >
-          Реальные подарки из Telegram
-        </div>
-      </div>
-
-      <div
-        style={{
-          padding: '6px 10px',
-          borderRadius: '12px',
-          background: 'rgba(255,255,255,0.08)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          fontSize: '12px',
-          color: 'rgba(255,255,255,0.7)'
-        }}
-      >
-        {telegramGifts.length} шт.
-      </div>
-    </div>
-
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-        gap: '12px'
-      }}
-    >
-      {telegramGifts.map((gift) => (
-        <div
-          key={gift.id}
-          style={{
-            position: 'relative',
-            overflow: 'hidden',
-            minHeight: '205px',
-            padding: '14px',
-            borderRadius: '20px',
-            background:
-              'linear-gradient(145deg, rgba(255,255,255,0.10), rgba(255,255,255,0.035))',
-            border: '1px solid rgba(255,255,255,0.09)',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.22)'
-          }}
-        >
-          <div
-            style={{
-              position: 'absolute',
-              top: '-35px',
-              right: '-35px',
-              width: '90px',
-              height: '90px',
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.06)',
-              filter: 'blur(8px)'
-            }}
-          />
-
-          <div
-            style={{
-              height: '120px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative'
-            }}
-          >
-             <img
-              src={`${API_URL}${gift.image}`}
-              alt={gift.name}
-              loading="lazy"
-              style={{
-                width: '110px',
-                height: '110px',
-                objectFit: 'contain',
-                filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.35))'
-              }}
-            />
-          </div>
-
-          <div
-            style={{
-              position: 'relative',
-              marginTop: '8px',
-              fontSize: '14px',
-              fontWeight: '700',
-              color: '#fff',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
-            }}
-          >
-            {gift.name}
-          </div>
-
-          <div
-            style={{
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginTop: '8px'
-            }}
-          >
-            <span
-              style={{
-                fontSize: '14px',
-                fontWeight: '800',
-                color: '#ffd84d'
-              }}
-            >
-              ⭐ {gift.starCount}
-            </span>
-
-            {gift.remainingCount && (
-              <span
-                style={{
-                  fontSize: '10px',
-                  color: 'rgba(255,255,255,0.45)'
-                }}
-              >
-                Осталось: {gift.remainingCount}
-              </span>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  </section>
-)}
+      <main className="content">
 
         {page === 'home' && (
           <>
@@ -791,13 +575,6 @@ const spinRoulette = async () => {
                 : 'Бесплатная рулетка'}
             </button>
 
-            <button
-              className="main-button"
-              onClick={activatePromo}
-            >
-              <span>🎟️</span>
-              Активировать промокод
-            </button>
             <div className="cards">
 
               <div className="card feature-card">
@@ -947,105 +724,104 @@ const spinRoulette = async () => {
             {!openingCase && (
               <div className="cards">
 
-                <div className="case-card starter-case">
+<div className="case-card poor-case">
+  <div className="case-glow">
+    {getCaseGift('5170145012310081615') && (
+      <img
+        src={`${API_URL}${getCaseGift('5170145012310081615').image}`}
+        alt="🥔 Бомж"
+      />
+    )}
+  </div>
 
-                  <div className="case-glow">
-{getCaseGift('5170145012310081615') ? (
-  <img
-    src={`${API_URL}${getCaseGift('5170145012310081615').image}`}
-    alt={getCaseGift('5170145012310081615').name}
-  />
-) : (
-  <img
-    src={commonGift}
-    alt="Telegram Gift"
-  />
-)}
-                  </div>
+  <div className="case-info">
+    <span className="case-label">🥔 БОМЖ</span>
+    <h3>Бомж</h3>
+    <p>Подарки до 200 ⭐</p>
+    <div className="case-price">⭐ 50</div>
+    <button
+      disabled={openingCase}
+      onClick={() => openCase('poor')}
+    >
+      Открыть кейс
+    </button>
+  </div>
+</div>
 
-                  <div className="case-info">
+<div className="case-card newbie-case">
+  <div className="case-glow">
+    {getCaseGift('5170250947678437525') && (
+      <img
+        src={`${API_URL}${getCaseGift('5170250947678437525').image}`}
+        alt="🆕 Новенький"
+      />
+    )}
+  </div>
 
-                    <span className="case-label">
-                      STARTER
-                    </span>
+  <div className="case-info">
+    <span className="case-label">🆕 НОВЕНЬКИЙ</span>
+    <h3>Новенький</h3>
+    <p>Подарки до 300 ⭐</p>
+    <div className="case-price">⭐ 150</div>
+    <button
+      disabled={openingCase}
+      onClick={() => openCase('newbie')}
+    >
+      Открыть кейс
+    </button>
+  </div>
+</div>
 
-                    <h3>
-                      Starter Case
-                    </h3>
+<div className="case-card rich-case">
+  <div className="case-glow">
+    {getCaseGift('5170564780938756245') && (
+      <img
+        src={`${API_URL}${getCaseGift('5170564780938756245').image}`}
+        alt="💰 Богач"
+      />
+    )}
+  </div>
 
-                    <p>
-                      Базовый кейс
-                      с подарком.
-                    </p>
+  <div className="case-info">
+    <span className="case-label">💰 БОГАЧ</span>
+    <h3>Богач</h3>
+    <p>Подарки до 500 ⭐</p>
+    <div className="case-price">⭐ 300</div>
+    <button
+      disabled={openingCase}
+      onClick={() => openCase('rich')}
+    >
+      Открыть кейс
+    </button>
+  </div>
+</div>
 
-                    <div className="case-price">
-                      ⭐ 10
-                    </div>
+<div className="case-card billionaire-case">
+  <div className="case-glow">
+    {getCaseGift('5170521118301225164') && (
+      <img
+        src={`${API_URL}${getCaseGift('5170521118301225164').image}`}
+        alt="👑 Миллиардер"
+      />
+    )}
+  </div>
 
-                    <button
-                      disabled={openingCase}
-                      onClick={() =>
-                        openCase('starter')
-                      }
-                    >
-                      Открыть кейс
-                    </button>
-
-                  </div>
-
-                </div>
-
-                <div className="case-card premium-case">
-
-                  <div className="case-glow">
-                    {getCaseGift('5170144170496491616') ? (
-  <img
-    src={`${API_URL}${getCaseGift('5170144170496491616').image}`}
-    alt={getCaseGift('5170144170496491616').name}
-  />
-) : (
-  <img
-    src={rareGift}
-    alt="Telegram Gift"
-  />
-)}
-                  </div>
-
-                  <div className="case-info">
-
-                    <span className="case-label">
-                      PREMIUM
-                    </span>
-
-                    <h3>
-                      Premium Case
-                    </h3>
-
-                    <p>
-                      Премиальный кейс
-                      с ценным подарком.
-                    </p>
-
-                    <div className="case-price">
-                      ⭐ 50
-                    </div>
-
-                    <button
-                      disabled={openingCase}
-                      onClick={() =>
-                        openCase('premium')
-                      }
-                    >
-                      Открыть кейс
-                    </button>
-
-                  </div>
-
-                </div>
-
+  <div className="case-info">
+    <span className="case-label">👑 МИЛЛИАРДЕР</span>
+    <h3>Миллиардер</h3>
+    <p>Редкие Telegram-подарки</p>
+    <div className="case-price">⭐ 699</div>
+    <button
+      disabled={openingCase}
+      onClick={() => openCase('billionaire')}
+    >
+      Открыть кейс
+    </button>
+  </div>
+</div>
               </div>
-            )}
 
+            )}
             {!openingCase &&
               lastReward && (
                 <div className="last-reward">
@@ -1457,8 +1233,8 @@ const spinRoulette = async () => {
             </p>
 
             <div className="result-value">
-  ⭐ {lastReward.value}
-</div>
+              💎 {lastReward.value}
+            </div>
 
             <button
               className="main-button"
