@@ -119,24 +119,26 @@ function App() {
     }
   }
 
-  const loadUsers = async () => {const loadCases = async () => {
-  try {
-    setCasesLoading(true)
+  const loadCases = async () => {
+    try {
+      setCasesLoading(true)
 
-    const response = await fetch(`${API_URL}/api/cases`)
-    const data = await response.json()
+      const response = await fetch(`${API_URL}/api/cases`)
+      const data = await response.json()
 
-    if (!response.ok || !data.ok) {
-      throw new Error(data.error || 'Не удалось загрузить кейсы')
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || 'Не удалось загрузить кейсы')
+      }
+
+      setCases(Object.values(data.cases || {}))
+    } catch (error) {
+      console.error('Cases API error:', error)
+    } finally {
+      setCasesLoading(false)
     }
-
-    setCases(Object.values(data.cases || {}))
-  } catch (error) {
-    console.error('Cases API error:', error)
-  } finally {
-    setCasesLoading(false)
   }
-}
+
+  const loadUsers = async () => {
     try {
       setAdminLoading(true)
 
