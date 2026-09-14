@@ -509,20 +509,26 @@ await animateToReward(data.reward, currentCase)
   }
 
   const getPrizeVisual = (reward) => {
-    return (
-      PRIZE_VISUALS[reward?.id] ||
-      PRIZE_VISUALS.common
-    )
+    if (reward?.image) {
+      return {
+        ...PRIZE_VISUALS.common,
+        image: `${API_URL}${reward.image}`
+      }
+    }
+
+    return PRIZE_VISUALS[reward?.id] || PRIZE_VISUALS.common
   }
 
   const getCaseGift = (id) => {
-    return PRIZE_VISUALS[id] || null
+    if (!id) return null
+
+    return {
+      image: `/api/telegram/gift-image/${encodeURIComponent(id)}`
+    }
   }
 
-  return (
-
-    <div className="app">
-
+    return (
+        <div className="app">
       <header className="header">
         <div>
           <h1>VeltoGifts</h1>
@@ -675,24 +681,26 @@ await animateToReward(data.reward, currentCase)
                       {reelItems.map(
                         (item) => {
 
-                          const visual =
-                            PRIZE_VISUALS[
-                              item.id
-                            ] ||
-                            PRIZE_VISUALS.common
+                            const visual =
+                              item.image
+                                ? {
+                                    ...PRIZE_VISUALS.common,
+                                    image: item.image
+                                  }
+                                : PRIZE_VISUALS[item.id] || PRIZE_VISUALS.common
 
-                          return (
-                            <div
-                              className={`reel-item ${visual.className}`}
-                              key={item.key}
-                            >
+                            return (
+                              <div
+                                className={`reel-item ${visual.className}`}
+                                key={item.key}
+                              >
 
-                              <div className="reel-icon">
-                                <img
-                                  src={visual.image}
-                                  alt={item.name}
-                                />
-                              </div>
+                                <div className="reel-icon">
+                                  <img
+                                    src={visual.image}
+                                    alt={item.name}
+                                  />
+                                </div>
 
                               <div className="reel-name">
                                 {item.name}
