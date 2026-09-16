@@ -1,0 +1,171 @@
+{
+  "nft": [
+    {
+      "id": "nft_001",
+      "name": "Pixel Art #001",
+      "value": 150,
+      "rarity": "common",
+      "image": "/assets/nft/pixel-001.svg"
+    },
+    {
+      "id": "nft_002",
+      "name": "Pixel Art #002",
+      "value": 200,
+      "rarity": "common",
+      "image": "/assets/nft/pixel-002.svg"
+    },
+    {
+      "id": "nft_003",
+      "name": "Cyber Punk",
+      "value": 350,
+      "rarity": "rare",
+      "image": "/assets/nft/cyber-punk.svg"
+    },
+    {
+      "id": "nft_004",
+      "name": "Digital Dragon",
+      "value": 400,
+      "rarity": "rare",
+      "image": "/assets/nft/digital-dragon.svg"
+    },
+    {
+      "id": "nft_005",
+      "name": "Golden Phoenix",
+      "value": 600,
+      "rarity": "epic",
+      "image": "/assets/nft/golden-phoenix.svg"
+    },
+    {
+      "id": "nft_006",
+      "name": "Cosmic Aura",
+      "value": 700,
+      "rarity": "epic",
+      "image": "/assets/nft/cosmic-aura.svg"
+    },
+    {
+      "id": "nft_007",
+      "name": "Eternal Diamond",
+      "value": 1200,
+      "rarity": "legendary",
+      "image": "/assets/nft/eternal-diamond.svg"
+    },
+    {
+      "id": "nft_008",
+      "name": "Genesis NFT",
+      "value": 1500,
+      "rarity": "legendary",
+      "image": "/assets/nft/genesis-nft.svg"
+    }
+  ],
+  "telegram": [
+    {
+      "id": "tg_balloon",
+      "name": "🎈 Воздушный шар",
+      "value": 50,
+      "rarity": "common",
+      "telegramId": "5170145012310081615"
+    },
+    {
+      "id": "tg_gift",
+      "name": "🎁 Подарок",
+      "value": 75,
+      "rarity": "common",
+      "telegramId": "5170250947678437525"
+    },
+    {
+      "id": "tg_cake",
+      "name": "🎂 Торт",
+      "value": 100,
+      "rarity": "rare",
+      "telegramId": "5170564780938756245"
+    },
+    {
+      "id": "tg_fireworks",
+      "name": "🎆 Фейерверк",
+      "value": 150,
+      "rarity": "rare",
+      "telegramId": "5170521118301225164"
+    },
+    {
+      "id": "tg_star",
+      "name": "⭐ Звезда",
+      "value": 200,
+      "rarity": "epic",
+      "telegramId": "5170145012310081616"
+    },
+    {
+      "id": "tg_crown",
+      "name": "👑 Корона",
+      "value": 300,
+      "rarity": "epic",
+      "telegramId": "5170145012310081617"
+    },
+    {
+      "id": "tg_rainbow",
+      "name": "🌈 Радуга",
+      "value": 500,
+      "rarity": "legendary",
+      "telegramId": "5170145012310081618"
+    },
+    {
+      "id": "tg_diamond",
+      "name": "💎 Алмаз",
+      "value": 750,
+      "rarity": "legendary",
+      "telegramId": "5170145012310081619"
+    }
+  ],
+  "cases": {
+    "poor": {
+      "label": "🥔 БОМЖ",
+      "name": "Бомж",
+      "price": 50,
+      "description": "Подарки до 200 ⭐",
+      "gifts": [
+        { "type": "telegram", "id": "tg_balloon" },
+        { "type": "telegram", "id": "tg_gift" },
+        { "type": "nft", "id": "nft_001" },
+        { "type": "nft", "id": "nft_002" }
+      ]
+    },
+    "newbie": {
+      "label": "🆕 НОВЕНЬКИЙ",
+      "name": "Новенький",
+      "price": 150,
+      "description": "Подарки до 300 ⭐",
+      "gifts": [
+        { "type": "telegram", "id": "tg_gift" },
+        { "type": "telegram", "id": "tg_cake" },
+        { "type": "nft", "id": "nft_002" },
+        { "type": "nft", "id": "nft_003" }
+      ]
+    },
+    "rich": {
+      "label": "💰 БОГАЧ",
+      "name": "Богач",
+      "price": 300,
+      "description": "Подарки до 500 ⭐",
+      "gifts": [
+        { "type": "telegram", "id": "tg_cake" },
+        { "type": "telegram", "id": "tg_fireworks" },
+        { "type": "nft", "id": "nft_003" },
+        { "type": "nft", "id": "nft_004" },
+        { "type": "nft", "id": "nft_005" }
+      ]
+    },
+    "billionaire": {
+      "label": "👑 МИЛЛИАРДЕР",
+      "name": "Миллиардер",
+      "price": 699,
+      "description": "Редкие Telegram-подарки",
+      "gifts": [
+        { "type": "telegram", "id": "tg_star" },
+        { "type": "telegram", "id": "tg_crown" },
+        { "type": "nft", "id": "nft_005" },
+        { "type": "nft", "id": "nft_006" },
+        { "type": "nft", "id": "nft_007" },
+        { "type": "nft", "id": "nft_008" }
+      ]
+    }
+  }
+}
